@@ -136,11 +136,20 @@
 
         <h1 class="product-single__title">{{ product.title }}</h1>
         <script>window.performance.mark('debut:product:title_visible');</script>
+        {% assign has_affiliate = false %}
+        {% assign affiliate_url = '' %}
+        {% for tag in product.tags %}
+          {% if tag contains 'affiliate' %}
+            {% assign split_tag = tag | split: '_' %}
+            {% assign affiliate_url = split_tag[1] %}
+            {% assign has_affiliate = true %}
+          {% endif %}
+        {% endfor %}
+        {% unless has_affiliate %}
           <div>⭐️ ⭐️ ⭐️ ⭐️ ⭐️</div>
           <div class="product__price">
             {% include 'product-price', variant: current_variant, show_vendor: section.settings.show_vendor %}
           </div>
-
           {%- if cart.taxes_included or shop.shipping_policy.body != blank -%}
             <div class="product__policies rte" data-product-policies>
               {%- if cart.taxes_included -%}
@@ -151,7 +160,7 @@
               {%- endif -%}
             </div>
           {%- endif -%}
-
+        {% endunless %}
           {% capture "form_classes" -%}
             product-form product-form-{{ section.id }}
             {%- if section.settings.enable_payment_button and product.has_only_default_variant %} product-form--payment-button-no-variants {%- endif -%}
@@ -217,6 +226,7 @@
                 {%- if section.settings.enable_payment_button %} product-form__item--payment-button {%- endif -%}
                 {%- if product.has_only_default_variant %} product-form__item--no-variants {%- endif -%}"
               >
+              {% unless has_affiliate %}
                 <button type="submit" name="add"
                   {% unless current_variant.available %} aria-disabled="true"{% endunless %}
                   aria-label="{% unless current_variant.available %}{{ 'products.product.sold_out' | t }}{% else %}{{ 'products.product.add_to_cart' | t }}{% endunless %}"
@@ -237,6 +247,12 @@
                 {% if section.settings.enable_payment_button %}
                   {{ form | payment_button }}
                 {% endif %}
+
+                {% else %}
+                  <a data-add-to-cart target='_blank' class="btn product-form__cart-submit" href='{{ affiliate_url }}'>See on Amazon</a>
+
+                {% endunless %}
+
               </div>
             </div>
           {% endform %}
